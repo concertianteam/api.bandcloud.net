@@ -1,4 +1,14 @@
 <?php
+mb_internal_encoding("UTF-8");
+
+header("Access-Control-Allow-Origin: *"); // docasne!!
+header('Access-Control-Allow-Headers: Content-Type');
+header("Access-Control-Allow-Methods: GET,PUT,POST,DELETE,OPTIONS");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Max-Age: 86400");
+header("X-Frame-Options: SAMEORIGIN");
+header("Connection: close");
+
 define("APP_ROOT", __DIR__);
 
 require_once(APP_ROOT . "/app/core/Config.php");
