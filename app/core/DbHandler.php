@@ -240,9 +240,9 @@ class DbHandler
     }
 
     public
-    function updateEvent($idEvent, $name, $datetime, $status, $visible, $bands)
+    function updateEvent($idEvent, $name, $datetime, $status, $visible)
     {
-        $STH = $this->connection->prepare("UPDATE Events SET name = :name, datetime = :datetime, status = :status, visible = :visible WHERE idEvents= :idEvent;");
+        $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, time = :time, status = :status, visible = :visible WHERE idEvents= :idEvent;");
 
         $STH->bindParam(':name', $name);
         $STH->bindParam(':datetime', $datetime);
@@ -253,40 +253,40 @@ class DbHandler
 
         $affectedRows = $STH->rowCount();
 
-        if (count($bands) > 0) {
-            $result = $this->updateEventBands($bands);
-            return $affectedRows > 0 || $result;
-        }
+        /* if (count($bands) > 0) {
+             $result = $this->updateEventBands($bands);
+             return $affectedRows > 0 || $result;
+         }*/
         return $affectedRows > 0;
     }
 
-    private
-    function updateEventBands($bands)
-    {
-        $affectedRows = 0;
-        $STH = $this->connection->prepare("DELETE FROM Events_Bands WHERE idEvents =:idEvent; ");
-        $STH->bindParam(':idEvent', $bands [0] ['idEvents']);
-        $STH->execute();
+    /* private
+     function updateEventBands($bands)
+     {
+         $affectedRows = 0;
+         $STH = $this->connection->prepare("DELETE FROM Events_Bands WHERE idEvents =:idEvent; ");
+         $STH->bindParam(':idEvent', $bands [0] ['idEvents']);
+         $STH->execute();
 
-        foreach ($bands as $band) {
-            $STH = $this->connection->prepare("INSERT INTO Events_Bands
-					(idEvents, idBands, role, reward, extras, technicalNeeds, Notes)
-					VALUES (:idEvent, :idBand, :role, :reward, :extras, :technicalNeeds, :notes);");
+         foreach ($bands as $band) {
+             $STH = $this->connection->prepare("INSERT INTO Events_Bands
+                     (idEvents, idBands, role, reward, extras, technicalNeeds, Notes)
+                     VALUES (:idEvent, :idBand, :role, :reward, :extras, :technicalNeeds, :notes);");
 
-            $STH->bindParam(':idEvent', $band ['idEvents']);
-            $STH->bindParam(':idBand', $band ['idBands']);
-            $STH->bindParam(':role', $band ['role']);
-            $STH->bindParam(':reward', $band ['reward']);
-            $STH->bindParam(':extras', $band ['extras']);
-            $STH->bindParam(':technicalNeeds', $band ['technicalNeeds']);
-            $STH->bindParam(':notes', $band ['Notes']);
+             $STH->bindParam(':idEvent', $band ['idEvents']);
+             $STH->bindParam(':idBand', $band ['idBands']);
+             $STH->bindParam(':role', $band ['role']);
+             $STH->bindParam(':reward', $band ['reward']);
+             $STH->bindParam(':extras', $band ['extras']);
+             $STH->bindParam(':technicalNeeds', $band ['technicalNeeds']);
+             $STH->bindParam(':notes', $band ['Notes']);
 
-            $STH->execute();
+             $STH->execute();
 
-            $affectedRows += $STH->rowCount();
-        }
-        return $affectedRows == count($bands);
-    }
+             $affectedRows += $STH->rowCount();
+         }
+         return $affectedRows == count($bands);
+     }*/
 
     public
     function deleteEvent($idEvent)
@@ -304,7 +304,7 @@ class DbHandler
     }
 
     /* -------------------------------Events------------------------------------------ */
-    /* -------------------------------Bands------------------------------------------ */
+    /* -------------------------------Bands------------------------------------------
     public
     function createBand($name, $email)
     {
@@ -381,7 +381,7 @@ class DbHandler
         return $affectedRows > 0;
     }
 
-    /* -------------------------------Bands------------------------------------------ */
+    -------------------------------Bands------------------------------------------ */
     /* ------------------------------Venues------------------------------------------ */
     public
     function getAllVenues()
@@ -462,7 +462,7 @@ class DbHandler
     function deleteFavourite($idFavourite)
     {
         $STH = $this->connection->prepare("DELETE FROM Favorite WHERE idFavorite = :idFavorite;");
-        $STH->bindParam(':idFavorite', $idFavorite);
+        $STH->bindParam(':idFavorite', $idFavourite);
         $STH->execute();
 
         $affectedRows = $STH->rowCount();

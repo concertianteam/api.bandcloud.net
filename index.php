@@ -175,7 +175,7 @@ $app->delete('/auth', array(
  * url - /auth/changePassword
  * method - post
  * params - api_key, oldPwd, new Pwd
- */
+ *//*
 $app->post('/auth/changepassword', array(
     'Validation',
     'authenticate'
@@ -205,7 +205,7 @@ $app->post('/auth/changepassword', array(
         $response ['message'] = "An error occurred. Please try again!";
         ClientEcho::echoResponse(INTERNAL_SERVER_ERROR, $response);
     }
-});
+});*/
 
 /* ----------------------EVENTS METHODS------------------------- */
 
@@ -213,7 +213,7 @@ $app->post('/auth/changepassword', array(
  * Create new event
  * url - /events
  * method - POST
- * params - idVenue, name, dateTime, status, visible, idSoundengineer, Bandsarray
+ * params - idVenue, name, dateTime, status, visible
  */
 $app->post('/events', array(
     'Validation',
@@ -223,6 +223,7 @@ $app->post('/events', array(
     $dbHandler = new DbHandler ();
     $validation->verifyRequiredParams(array(
         'idVenue',
+        'name',
         'status',
         'visible'
     ));
@@ -230,12 +231,13 @@ $app->post('/events', array(
     // reading post params
     $idVenue = $app->request->post('idVenue');
     $name = $app->request->post('name');
-    $dateTime = $app->request->post('dateTime');
+    $date = $app->request->post('date');
+    $time = $app->request->post('time');
     $status = $app->request->post('status');
     $visible = $app->request->post('visible');
-    $bands = ( array )$app->request->post('bands');
+    //$bands = ( array )$app->request->post('bands');
 
-    $eventId = $dbHandler->createEvent($idVenue, $name, $dateTime, $status, $visible, $bands);
+    $eventId = $dbHandler->createEvent($idVenue, $name, $date, $time, $status, $visible);
 
     $response = array();
     if ($eventId != NULL) {
@@ -251,7 +253,7 @@ $app->post('/events', array(
 });
 
 /**
- * Create new event
+ * Create new event - doèasné
  * url - /events
  * method - POST
  * params - idVenue, name, dateTime, status, visible, idSoundengineer, Bandsarray
@@ -341,7 +343,7 @@ $app->put('/events/:id', array(
     $datetime = $app->request->put('datetime');
     $status = $app->request->put('status');
     $visible = $app->request->put('visible');
-    $bands = $app->request->put('bands');
+    //$bands = $app->request->put('bands');
 
     $dbHandler = new DbHandler ();
     $response = array();
@@ -386,14 +388,14 @@ $app->delete('/events/:id', array(
     ClientEcho::echoResponse(OK, $response);
 });
 
-/* ----------------------BANDS METHODS------------------------- */
+/* ----------------------BANDS METHODS-------------------------
 
 /**
  * Create new band
  * url - /bands
  * method - POST
  * params - ID Venue, name, email
- */
+ *
 $app->post('/bands', array(
     'Validation',
     'authenticate'
@@ -428,7 +430,7 @@ $app->post('/bands', array(
  * Listing all bands
  * url - /bands
  * method - GET
- */
+ *
 $app->get('/bands', array(
     'Validation',
     'authenticate'
@@ -444,7 +446,7 @@ $app->get('/bands', array(
  * Listing single band
  * url - /bands/:id
  * method - GET
- */
+ *
 $app->get('/bands/:id', array(
     'Validation',
     'authenticate'
@@ -461,7 +463,7 @@ $app->get('/bands/:id', array(
  * url - /bands/:id
  * method - PUT
  * params - name, email
- */
+ *
 $app->put('/bands/:id', array(
     'Validation',
     'authenticate'
@@ -497,7 +499,7 @@ $app->put('/bands/:id', array(
  * Delete band
  * url - /bands/:id
  * method - DELETE
- */
+ *
 $app->delete('/bands/:id', array(
     'Validation',
     'authenticate'
@@ -521,7 +523,7 @@ $app->delete('/bands/:id', array(
     ClientEcho::echoResponse(OK, $response);
 });
 
-/* ----------------------VENUES METHODS------------------------- */
+ ----------------------VENUES METHODS------------------------- */
 
 /**
  * Listing all venues

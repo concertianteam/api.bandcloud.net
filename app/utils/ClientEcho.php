@@ -30,9 +30,9 @@ class ClientEcho {
 				case EVENT :
 					$response = ClientEcho::buildEventsResponse ( $result );
 					break;
-				case BAND :
+				/*case BAND :
 					$response = ClientEcho::buildBandsResponse ( $result );
-					break;
+					break;*/
 				case VENUE :
 					$response = ClientEcho::buildVenuesResponse ( $result );
 					break;
@@ -63,7 +63,7 @@ class ClientEcho {
 			$tmp ["visible"] = $row ["visible"];
 			$response ['events'] [] = $tmp;
 			
-			if (isset ( $row ['bands'] )) {
+			/*if (isset ( $row ['bands'] )) {
 				foreach ( $row ['bands'] as $bandRow ) {
 					$tmp ["idBand"] = $bandRow ["idBands"];
 					$tmp ["name"] = $bandRow ["name"];
@@ -76,12 +76,12 @@ class ClientEcho {
 					
 					$response ['events'] ['bands'] [] = $tmp;
 				}
-			}
+			}*/
 		}
 		
 		return $response;
 	}
-	private static function buildBandsResponse($result) {
+	/*private static function buildBandsResponse($result) {
 		foreach ( $result as $row ) {
 			$tmp = array ();
 			
@@ -92,7 +92,7 @@ class ClientEcho {
 			$response ['bands'] [] = $tmp;
 		}
 		return $response;
-	}
+	}*/
 	private static function buildVenuesResponse($result) {
 		foreach ( $result as $row ) {
 			$tmp = array ();
