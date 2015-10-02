@@ -241,6 +241,42 @@ $app->post('/events', array(
 });
 
 /**
+ * Create new event
+ * url - /events
+ * method - POST
+ * params - idVenue, name, dateTime, status, visible, idSoundengineer, Bandsarray
+ */
+$app->post('/events/unregistered', function () use ($app) {
+    $validation = new Validation ();
+    $dbHandler = new DbHandler ();
+    $validation->verifyRequiredParams(array(
+        'idVenue',
+        'eventName',
+        'date',
+        'time'
+    ));
+
+    // reading post params
+    $idVenue = $app->request->post('idVenue');
+    $eventName = $app->request->post('eventName');
+    $date = $app->request->post('date');
+    $time = $app->request->post('time');
+
+    $eventId = $dbHandler->createEvent($idVenue, $eventName, $date, $time, 1, 0);
+
+    $response = array();
+    if ($eventId != NULL) {
+        $response ["success"] = TRUE;
+        $response ["message"] = "Event created successfully";
+    } else {
+        $response ["success"] = FALSE;
+        $response ["message"] = "Failed to create Event. Please try again ";
+    }
+
+    ClientEcho::echoResponse(CREATED, $response);
+});
+
+/**
  * Listing all events
  * url - /events
  * method - GET

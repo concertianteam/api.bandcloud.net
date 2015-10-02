@@ -172,12 +172,13 @@ class DbHandler
 
     /* -------------------------------Account----------------------------------------- */
     /* -------------------------------Events------------------------------------------ */
-    public function createEvent($idVenue, $name, $dateTime, $status, $visible, $bandsArray)
+    public function createEvent($idVenue, $name, $date, $time, $status, $visible /*, $bandsArray*/)
     {
-        $STH = $this->connection->prepare("INSERT INTO Events(name, dateTime, status, visible, idVenue)
-				VALUES(:name, :dateTime, :status, :visible, :idVenue)");
+        $STH = $this->connection->prepare("INSERT INTO Events(name, date, time, status, visible, idVenue)
+				VALUES(:name, :date, :time, :status, :visible, :idVenue)");
         $STH->bindParam(':name', $name);
-        $STH->bindParam('dateTime', $dateTime);
+        $STH->bindParam('date', $date);
+        $STH->bindParam('time', $time);
         $STH->bindParam('status', $status);
         $STH->bindParam('visible', $visible);
         $STH->bindParam('idVenue', $idVenue);
@@ -187,7 +188,7 @@ class DbHandler
             // assign bands to event
             $eventId = $this->connection->lastInsertId();
 
-            foreach ($bandsArray as $band) {
+            /*foreach ($bandsArray as $band) {
                 $STH = $this->connection->prepare("INSERT INTO Events_Bands (idEvents, idBands, role, reward, extras, technicalNeeds, Notes)
 							VALUES (:idEvent, :idBand, :role, :reward, :extras, :technicalNeeds, :notes)");
                 $STH->bindParam(':idEvent', $eventId);
@@ -198,7 +199,7 @@ class DbHandler
                 $STH->bindParam(':technicalNeeds', $band ['technicalNeeds']);
                 $STH->bindParam(':notes', $band ['notes']);
                 $STH->execute();
-            }
+            }*/
             // returns ID of event
             return $eventId;
         } else {
@@ -210,7 +211,7 @@ class DbHandler
     public
     function getAllEvents()
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, datetime, status, visible FROM Events WHERE idVenue = :idVenue;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, time, status, visible FROM Events WHERE idVenue = :idVenue;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->execute();
 
@@ -222,19 +223,19 @@ class DbHandler
     public
     function getSingleEvent($idEvent)
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, datetime, status, visible FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, time, status, visible FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->bindParam(':idEvent', $idEvent);
         $STH->execute();
 
         $event = $STH->fetchAll();
 
-        $STH = $this->connection->prepare("SELECT Bands.idBands, name, email, role, reward, extras, technicalNeeds, Notes FROM Bands INNER JOIN Events_Bands
-				ON Bands.idBands = Events_Bands.idBands WHERE idEvents = :idEvent");
-        $STH->bindParam(':idEvent', $idEvent);
-        $STH->execute();
+        //$STH = $this->connection->prepare("SELECT Bands.idBands, name, email, role, reward, extras, technicalNeeds, Notes FROM Bands INNER JOIN Events_Bands
+        //		ON Bands.idBands = Events_Bands.idBands WHERE idEvents = :idEvent");
+        //$STH->bindParam(':idEvent', $idEvent);
+        //$STH->execute();
 
-        $event [0] ['bands'] = $STH->fetchAll();
+        //$event [0] ['bands'] = $STH->fetchAll();
         return $event;
     }
 
