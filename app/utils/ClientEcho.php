@@ -99,7 +99,7 @@ class ClientEcho
             $tmp ["idVenue"] = $row ["idVenues"];
             $tmp ["name"] = $row ["name"];
 
-            $response ['events'] [] = $tmp;
+            $response[] = $tmp;
 
         }
 

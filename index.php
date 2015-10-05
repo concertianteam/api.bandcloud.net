@@ -562,7 +562,7 @@ $app->get('/venues/:id', array(
  * url - /venues/names
  * method - post
  */
-$app->post('/venues/name', function () use ($app){
+$app->post('/venues/name', function () use ($app) {
     $validation = new Validation ();
     $dbHandler = new DbHandler ();
     $validation->verifyRequiredParams(array(
