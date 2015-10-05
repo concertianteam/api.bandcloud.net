@@ -558,6 +558,25 @@ $app->get('/venues/:id', array(
 });
 
 /**
+ * Listing venue id,name pairs
+ * url - /venues/names
+ * method - post
+ */
+$app->post('/venues/name', function () use ($app){
+    $validation = new Validation ();
+    $dbHandler = new DbHandler ();
+    $validation->verifyRequiredParams(array(
+        'startsWith'
+    ));
+
+    $startsWith = $app->request->put('startsWith');
+
+    // fetching single venue
+    $result = $dbHandler->getVenuesNames($startsWith);
+    ClientEcho::buildResponse($result, VENUENAMES);
+});
+
+/**
  * Update venue photo
  * url - /venues/:id
  * method - POST

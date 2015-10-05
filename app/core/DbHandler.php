@@ -408,6 +408,18 @@ class DbHandler
         return $venue;
     }
 
+    public function getVenuesNames($startsWith)
+    {
+        $startsWith = $startsWith . '%';
+        $STH = $this->connection->prepare("SELECT idVenues, name FROM Venues WHERE LOWER(name) like LOWER(:startsWith);");
+        $STH->bindParam(':startsWith', $startsWith);
+        $STH->execute();
+
+        $venues = $STH->fetchAll();
+
+        return $venues;
+    }
+
     public
     function updateVenue($urlPhoto)
     {
