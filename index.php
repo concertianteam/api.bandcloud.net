@@ -50,8 +50,7 @@ $app->post('/register', function () use ($app) {
         'name',
         'addressFirst',
         'city',
-        'state',
-        'zipCode'
+        'state'
     ));
 
     $response = array();
@@ -253,7 +252,7 @@ $app->post('/events', array(
 });
 
 /**
- * Create new event - doèasné
+ * Create new event - doï¿½asnï¿½
  * url - /events
  * method - POST
  * params - idVenue, name, dateTime, status, visible, idSoundengineer, Bandsarray
@@ -349,7 +348,7 @@ $app->put('/events/:id', array(
     $response = array();
 
     // updating event
-    $result = $dbHandler->updateEvent($idEvent, $name, $datetime, $status, $visible, $bands);
+    $result = $dbHandler->updateEvent($idEvent, $name, $datetime, $status, $visible /*, $bands*/);
     if ($result) {
         // event successfully updated
         $response ["success"] = TRUE;
