@@ -76,7 +76,8 @@ $app->post('/register', function () use ($app) {
     if ($res == ACCOUNT_CREATED_SUCCESSFULLY) {
         $response ["success"] = TRUE;
         $response ["message"] = "You are successfully registered";
-        ClientEcho::echoResponse('CREATED', $response);
+        $app->response->redirect('http://manager.concertian.com/payment.html', 303);
+        //ClientEcho::echoResponse('CREATED', $response);
     } else if ($res == ACCOUNT_CREATE_FAILED) {
         $response ["success"] = FALSE;
         $response ["message"] = "Oops! An error occurred while registering";
