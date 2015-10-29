@@ -95,4 +95,32 @@ class Validation
             $app->stop();
         }
     }
+
+    function sendConfirmationEmail($confirmCode, $email, $name)
+    {
+        $subject = "Your registration with Concertian";
+
+        $confirm_url = "http://manager.concertian.com/confirmreg.php?code=" . $confirmCode;
+
+        $message = "Hello " . $name . "\r\n\r\n" .
+            "Thanks for your registration with Concertian \r\n" .
+            "Please click the link below to confirm your registration.\r\n" .
+            "$confirm_url\r\n" .
+            "\r\n" .
+            "Regards,\r\n" .
+            "Webmaster\r\n Concertian.com";
+
+        $headers = 'From: registration@concertian.com' . "\r\n";
+
+        mail($email, $subject, $message, $headers);
+
+        return true;
+    }
+
+    function MakeConfirmationMd5($email)
+    {
+        $randno1 = rand();
+        $randno2 = rand();
+        return md5($email . $randno1 . '' . $randno2);
+    }
 }

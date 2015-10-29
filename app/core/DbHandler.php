@@ -50,6 +50,8 @@ class DbHandler
      *            account login email
      * @param String $password
      *            account login password
+     * @param String $confirmCode
+     *            confirmation code
      * @param String $name
      *            Venue name
      * @param String $addressFirst
@@ -69,14 +71,14 @@ class DbHandler
      *
      * @return constant ('ACCOUNT_CREATED_SUCCESSFULLY', 'ACCOUNT_CREATE_FAILED', 'ACCOUNT_ALREADY_EXIST')
      */
-    public function createAccount($email, $password, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage)
+    public function createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage)
     {
         //$idAccount = 1;
         // First check if account already exist in db
         if (!$this->isAccountInDb($email)) {
             //$account = HttpRequestsHandler::registerRequest ( $email, $password );
 
-            $idAccount = SoapHandler::register($email, $password);
+            $idAccount = SoapHandler::register($email, $password, $confirmCode);
             if ($idAccount == ACCOUNT_CREATE_FAILED) return ACCOUNT_CREATE_FAILED;
             $STH = $this->connection->prepare("BEGIN;
 					INSERT INTO Address(state, city, zip, address_1, address_2) VALUES(:state, :city, :zip, :address_1, :address_2);
@@ -122,8 +124,9 @@ class DbHandler
         $STH = $this->connection->prepare("SELECT idAccount from Venues WHERE email = :email");
         $STH->bindParam(':email', $email);
         $STH->execute();
-        $num_rows = $STH->rowCount();
-        return $num_rows > 0;
+        $idAccount = $STH->fetch()['idAccount'];
+
+        return $idAccount != NULL;
     }
 
     /**

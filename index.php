@@ -36,6 +36,50 @@ $app->get('/', function () use ($app) {
 /* ----------------------REGISTER METHODS------------------------- */
 
 /**
+ * emlail verification
+ * url - /verifyemail
+ * method - POST
+ * params - email
+ */
+$app->post('/verifyemail', function () use ($app) {
+    // check for required params
+    $validation = new Validation ();
+    $validation->verifyRequiredParams(array(
+        'email'
+    ));
+
+    $response = array();
+
+    // reading post params
+    $email = $app->request->post('email');
+
+    // validating email address
+    $validation->validateEmail($email);
+
+    $dbHandler = new DbHandler ();
+    $account = $dbHandler->getAccountByEmail($email);
+
+    if ($account != NULL) {
+        $response ["success"] = TRUE;
+        $response ['name'] = $account ['name'];
+        $response ['email'] = $account ['email'];
+        $response ['idAccount'] = $account ['idAccount'];
+        $response ['state'] = $account ['state'];
+        $response ['city'] = $account ['city'];
+        $response ['zipCode'] = $account ['zip'];
+        $response ['addressFirst'] = $account ['address_1'];
+        $response ['addressSecond'] = $account ['address_2'];
+
+        ClientEcho::echoResponse(OK, $response);
+    } else {
+        // unknown error occured
+        $response ['success'] = FALSE;
+        $response ['message'] = "Venue is not in database!";
+        ClientEcho::echoResponse(OK, $response);
+    }
+});
+
+/**
  * Account Registration
  * url - /register
  * method - POST
@@ -69,15 +113,17 @@ $app->post('/register', function () use ($app) {
 
     // validating email address
     $validation->validateEmail($email);
+    $confirmCode = urlencode($this->MakeConfirmationMd5($email));
 
     $dbHandler = new DbHandler ();
-    $res = $dbHandler->createAccount($email, $password, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage);
+    $res = $dbHandler->createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage);
 
     if ($res == ACCOUNT_CREATED_SUCCESSFULLY) {
+        $validation->sendConfirmationEmail($confirmCode, $email, $name);
         $response ["success"] = TRUE;
         $response ["message"] = "You are successfully registered";
-        $app->response->redirect('http://manager.concertian.com/payment.html', 303);
-        //ClientEcho::echoResponse('CREATED', $response);
+        //$app->response->redirect('http://manager.concertian.com/payment.html', 303);
+        ClientEcho::echoResponse('CREATED', $response);
     } else if ($res == ACCOUNT_CREATE_FAILED) {
         $response ["success"] = FALSE;
         $response ["message"] = "Oops! An error occurred while registering";
