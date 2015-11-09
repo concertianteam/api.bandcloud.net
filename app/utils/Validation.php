@@ -100,24 +100,30 @@ class Validation
     {
         $subject = "Your registration with Concertian";
 
-        $confirm_url = "http://manager.concertian.com/confirmreg.php?code=" . $confirmCode;
-
-        $message = "Hello " . $name . "\r\n\r\n" .
+        $confirm_url = "http://api.bandcloud.net/confirmreg.php?code=";
+        $message = "Hello " . $name . "\r\n" .
             "Thanks for your registration with Concertian \r\n" .
             "Please click the link below to confirm your registration.\r\n" .
-            "$confirm_url\r\n" .
+            "<a href=\"" . $confirm_url . $confirmCode . "\">Confirm</a>\r\n" .
             "\r\n" .
             "Regards,\r\n" .
-            "Webmaster\r\n Concertian.com";
+            "Webmaster\r\n <b>Concertian</b>.com";
 
-        $headers = 'From: registration@concertian.com' . "\r\n";
+        $headers = "From: Concertian < info@concertian.com >\r\n";
+        $headers .= "Cc: Concertian < info@concertian.com >\r\n";
+        $headers .= "X-Sender: Concertian < info@concertian.com >\r\n";
+        $headers .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
+        $headers .= "X-Priority: 1\r\n"; // Urgent message!
+        $headers .= "Return-Path: info@concertian.com\r\n"; // Return path for errors
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=iso-8859-1\r\n";
 
         mail($email, $subject, $message, $headers);
 
         return true;
     }
 
-    function MakeConfirmationMd5($email)
+    function makeConfirmationMd5($email)
     {
         $randno1 = rand();
         $randno2 = rand();

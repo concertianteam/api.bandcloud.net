@@ -61,9 +61,11 @@ $app->post('/verifyemail', function () use ($app) {
 
     if ($account != NULL) {
         $response ["success"] = TRUE;
+        $response ['idVenue'] = $account ['idVenues'];
         $response ['name'] = $account ['name'];
         $response ['email'] = $account ['email'];
         $response ['idAccount'] = $account ['idAccount'];
+        $response ['idAddress'] = $account ['idAddress'];
         $response ['state'] = $account ['state'];
         $response ['city'] = $account ['city'];
         $response ['zipCode'] = $account ['zip'];
@@ -111,12 +113,15 @@ $app->post('/register', function () use ($app) {
     $zipCode = $app->request->post('zipCode');
     $urlImage = $app->request->post('urlImage');
 
+    $idVenue = $app->request->post('idVenue');
+    $idAddress = $app->request->post('idAddress');
+
     // validating email address
     $validation->validateEmail($email);
-    $confirmCode = urlencode($this->MakeConfirmationMd5($email));
+    $confirmCode = urlencode($validation->makeConfirmationMd5($email));
 
     $dbHandler = new DbHandler ();
-    $res = $dbHandler->createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage);
+    $res = $dbHandler->createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage, $idVenue, $idAddress);
 
     if ($res == ACCOUNT_CREATED_SUCCESSFULLY) {
         $validation->sendConfirmationEmail($confirmCode, $email, $name);

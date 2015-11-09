@@ -2,11 +2,11 @@
 
 class SoapHandler
 {
-    static function register($email, $password)
+    static function register($confirmCode, $email, $password)
     {
         $client = MySoapClient::getInstance();
         try {
-            $response = json_decode($client->register($email, $password), TRUE);
+            $response = json_decode($client->register($confirmCode, $email, $password), TRUE);
             if ($response['success'] == TRUE) return $response['accountId'];
             else return ACCOUNT_CREATE_FAILED;
         } catch (SoapFault $e) {

@@ -25,7 +25,7 @@ class DbHandler
      */
     public function getAccountByEmail($email)
     {
-        $STH = $this->connection->prepare("SELECT idVenues, name, email, urlPhoto, idAccount, state, city, zip, address_1, address_2
+        $STH = $this->connection->prepare("SELECT idVenues, name, email, urlPhoto, idAccount, a.idAddress, state, city, zip, address_1, address_2
         FROM Venues v
         INNER JOIN Address a
         ON v.idAddress = a.idAddress
@@ -71,20 +71,33 @@ class DbHandler
      *
      * @return constant ('ACCOUNT_CREATED_SUCCESSFULLY', 'ACCOUNT_CREATE_FAILED', 'ACCOUNT_ALREADY_EXIST')
      */
-    public function createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage)
+    public function createAccount($email, $password, $confirmCode, $name, $addressFirst, $addressSecond, $city, $country, $state, $zipCode, $urlImage, $idVenue, $idAddress)
     {
-        //$idAccount = 1;
         // First check if account already exist in db
         if (!$this->isAccountInDb($email)) {
-            //$account = HttpRequestsHandler::registerRequest ( $email, $password );
-
-            $idAccount = SoapHandler::register($email, $password, $confirmCode);
+            $idAccount = SoapHandler::register($confirmCode, $email, $password);
             if ($idAccount == ACCOUNT_CREATE_FAILED) return ACCOUNT_CREATE_FAILED;
-            $STH = $this->connection->prepare("BEGIN;
-					INSERT INTO Address(state, city, zip, address_1, address_2) VALUES(:state, :city, :zip, :address_1, :address_2);
-					INSERT INTO Venues(name, email, urlPhoto, idAddress, idAccount) VALUES(:name, :email, :urlPhoto, LAST_INSERT_ID(), :idAccount);
-					COMMIT;");
 
+            if ($idVenue == NULL) {
+                $STH = $this->connection->prepare("BEGIN;
+					INSERT INTO Address(state, city, zip, address_1, address_2)
+					VALUES(:state, :city, :zip, :address_1, :address_2);
+					INSERT INTO Venues(name, email, urlPhoto, idAddress, idAccount)
+					VALUES(:name, :email, :urlPhoto, LAST_INSERT_ID(), :idAccount);
+					COMMIT;");
+            } else {
+                $STH = $this->connection->prepare("BEGIN; UPDATE Address
+                SET
+                state = :state, city = :city, zip =  :zip, address_1 = :address_1, address_2 =  :address_2
+                WHERE idAddress = :idAddress;
+                UPDATE Venues
+                SET
+                name = :name, urlPhoto = :urlPhoto, idAddress = :idAddress, idAccount = :idAccount
+                WHERE idVenues = :idVenue;
+                COMMIT;");
+                $STH->bindParam(':idAddress', $idAddress);
+                $STH->bindParam(':idVenue', $idVenue);
+            }
             $STH->bindParam(':state', $state);
             $STH->bindParam(':city', $city);
             $STH->bindParam(':zip', $zipCode);
