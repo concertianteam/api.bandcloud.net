@@ -170,7 +170,7 @@ $app->post('/auth', function () use ($app) {
             $response ['name'] = $account ['name'];
             $response ['email'] = $account ['email'];
             $response ['urlPhoto'] = $account ['urlPhoto'];
-            $response ['idVenues'] = $account ['idVenue'];
+            $response ['idVenue'] = $account ['idVenues'];
             $response ['idAccount'] = $account ['idAccount'];
             $response ['state'] = $account ['state'];
             $response ['city'] = $account ['city'];
