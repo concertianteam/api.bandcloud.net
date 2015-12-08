@@ -129,4 +129,36 @@ class Validation
         $randno2 = rand();
         return md5($email . $randno1 . '' . $randno2);
     }
+
+    public static function validateLogin($response)
+    {
+        $app = \Slim\Slim::getInstance();
+
+        switch ($response['status']) {
+            case PAID:
+                //everything is ok, returning api key
+                return $response['apiKey'];
+                break;
+            case NOT_PAID:
+                //payment is not registered for this account
+                $app->response->redirect('https://manager.concertian.com/payment.html?idAccount=' . $response['idAccount']);
+                //array('idAccount' => $response['idAccount'])));
+                $app->stop();
+                break;
+            case INVALID_CREDENTIALS:
+                // account credentials are wrong
+                $response ['success'] = FALSE;
+                $response ['message'] = "Login failed. Incorrect credentials!";
+                ClientEcho::echoResponse(UNAUTHORIZED, $response);
+                $app->stop();
+                break;
+            case ERROR:
+                // Unknown error
+                $response ["success"] = false;
+                $response ["message"] = "Unknown Error!";
+                ClientEcho::echoResponse(BAD_REQUEST, $response);
+                $app->stop();
+                break;
+        }
+    }
 }

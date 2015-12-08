@@ -1,7 +1,9 @@
 <?php
 
+
 class SoapHandler
 {
+
     static function register($confirmCode, $email, $password)
     {
         $client = MySoapClient::getInstance();
@@ -18,16 +20,24 @@ class SoapHandler
     {
         $client = MySoapClient::getInstance();
         try {
-            $response = json_decode($client->checkLogin($email, $password), TRUE);
-            if ($response['success'] == TRUE) {
-                return $response['apiKey'];
-            } else {
-                //$response ['idAccount']
-                //$response ['apiKey']
-            }
+            $response = $client->checkLogin($email, $password);
         } catch (SoapFault $e) {
-            echo $client->__getLastResponse();
+            echo $response = $client->__getLastResponse();
         }
+
+        return Validation::validateLogin($response);
+
+        /*  try {
+              $response = json_decode($client->checkLogin($email, $password), TRUE);
+              if ($response['success'] == TRUE) {
+                  return $response['apiKey'];
+              } else {
+                  //$response ['idAccount']
+                  //$response ['apiKey']
+              }
+          } catch (SoapFault $e) {
+              echo $client->__getLastResponse();
+          }*/
     }
 
     static function isApiKeyValid($apiKey)

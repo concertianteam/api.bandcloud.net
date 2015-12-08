@@ -161,7 +161,7 @@ $app->post('/auth', function () use ($app) {
     $dbHandler = new DbHandler ();
     $apiKey = SoapHandler::login($email, $password);
     // check for correct email and password
-    if ($apiKey != INVALID_CREDENTIALS) {
+    if ($apiKey != null) {
         // get Account by email
         $account = $dbHandler->getAccountByEmail($email);
         if ($account != NULL) {
