@@ -40,6 +40,18 @@ class SoapHandler
           }*/
     }
 
+    static function addSubscription($apiKey, $subscriptionId)
+    {
+        $client = MySoapClient::getInstance();
+        try {
+            $response = json_decode($client->addSubscription($apiKey, $subscriptionId), TRUE);
+        } catch (SoapFault $e) {
+            echo $client->__getLastResponse();
+        }
+        return $response['success'];
+    }
+
+
     static function isApiKeyValid($apiKey)
     {
         $client = MySoapClient::getInstance();

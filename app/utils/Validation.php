@@ -98,29 +98,40 @@ class Validation
 
     function sendConfirmationEmail($confirmCode, $email, $name)
     {
-        $subject = "Your registration with Concertian";
+        $confirm_url = "https://api.concertian.com/confirmreg.php?code=";
 
-        $confirm_url = "http://api.bandcloud.net/confirmreg.php?code=";
-        $message = "Hello " . $name . "\r\n" .
-            "Thanks for your registration with Concertian \r\n" .
-            "Please click the link below to confirm your registration.\r\n" .
-            "<a href=\"" . $confirm_url . $confirmCode . "\">Confirm</a>\r\n" .
-            "\r\n" .
-            "Regards,\r\n" .
-            "Webmaster\r\n <b>Concertian</b>.com";
+        $mail = new PHPMailer;
 
-        $headers = "From: Concertian < info@concertian.com >\r\n";
-        $headers .= "Cc: Concertian < info@concertian.com >\r\n";
-        $headers .= "X-Sender: Concertian < info@concertian.com >\r\n";
-        $headers .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
-        $headers .= "X-Priority: 1\r\n"; // Urgent message!
-        $headers .= "Return-Path: info@concertian.com\r\n"; // Return path for errors
-        $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=iso-8859-1\r\n";
+        $mail->isSMTP();                                      // Set mailer to use SMTP
+        $mail->Host = 'smtp.websupport.sk';  // Specify main and backup SMTP servers
+        $mail->SMTPAuth = true;                               // Enable SMTP authentication
+        $mail->Username = 'service@concertian.com';                 // SMTP username
+        $mail->Password = 'Heslokleslo2x#';                           // SMTP password
+        $mail->Port = 25;                                    // TCP port to connect to
 
-        mail($email, $subject, $message, $headers);
+        $mail->CharSet = 'UTF-8';
+        $mail->setFrom('service@concertian.com');
+        $mail->addAddress($email);     // Add a recipient
+        $mail->addReplyTo('service@concertian.com');
+        $mail->isHTML(true);                                  // Set email format to HTML
 
-        return true;
+
+        $confirm_url = "https://api.concertian.com/confirmreg.php?code=";
+
+        $message = 'Dobrý deň ' . $name . ',<br>Ďakujeme za registráciu v systéme concertian LITE, prosím pre dokončenie registrácie kliknite dokončiť<br>
+        <a href= \'' . $confirm_url . $confirmCode . ' \' style="display: block; width: 200px; text-align: center; font-size: 1.2em; margin-left:20%; height: 30px; border-radius: 4px; color: #fff;
+        text-decoration: none; background: #ffbb33 ; box-sizing: border-box;" >DOKONČIŤ</a><br><br>Regards,<br>Webmaster<br> <b>Concertian</b>.com\'';
+
+        $mail->Subject = 'Your registration with Concertian';
+        $mail->Body = $message;
+        //$mail->AltBody = 'This is the body in plain text for non - HTML mail clients';
+
+        if (!$mail->send()) {
+            return false;
+        } else {
+            return true;
+        }
+
     }
 
     function makeConfirmationMd5($email)
@@ -137,26 +148,29 @@ class Validation
         switch ($response['status']) {
             case PAID:
                 //everything is ok, returning api key
-                return $response['apiKey'];
+                $auth['apiKey'] = $response['apiKey'];
+                $auth['subscriptionId'] = $response['subscriptionId'];
+                return $auth;
                 break;
             case NOT_PAID:
                 //payment is not registered for this account
-                $app->response->redirect('https://manager.concertian.com/payment.html?idAccount=' . $response['idAccount']);
+                $app->response->redirect('https://manager.concertian.com/payment.html?apiKey=' . $response['apiKey']);
+
                 //array('idAccount' => $response['idAccount'])));
                 $app->stop();
                 break;
             case INVALID_CREDENTIALS:
                 // account credentials are wrong
-                $response ['success'] = FALSE;
-                $response ['message'] = "Login failed. Incorrect credentials!";
-                ClientEcho::echoResponse(UNAUTHORIZED, $response);
+                $res ['success'] = FALSE;
+                $res ['message'] = "Login failed. Incorrect credentials!";
+                ClientEcho::echoResponse(UNAUTHORIZED, $res);
                 $app->stop();
                 break;
             case ERROR:
                 // Unknown error
-                $response ["success"] = false;
-                $response ["message"] = "Unknown Error!";
-                ClientEcho::echoResponse(BAD_REQUEST, $response);
+                $res ["success"] = FALSE;
+                $res ["message"] = "Unknown Error!";
+                ClientEcho::echoResponse(BAD_REQUEST, $res);
                 $app->stop();
                 break;
         }

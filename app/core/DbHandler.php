@@ -188,11 +188,13 @@ class DbHandler
 
     /* -------------------------------Account----------------------------------------- */
     /* -------------------------------Events------------------------------------------ */
-    public function createEvent($idVenue, $name, $date, $time, $status, $visible /*, $bandsArray*/)
+    public function createEvent($idVenue, $name, $detail, $entry, $date, $time, $status, $visible)
     {
-        $STH = $this->connection->prepare("INSERT INTO Events(name, date, time, status, visible, idVenue)
-				VALUES(:name, :date, :time, :status, :visible, :idVenue)");
+        $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, date, time, status, visible, idVenue)
+				VALUES(:name,:details, :entry, :date, :time, :status, :visible, :idVenue)");
         $STH->bindParam(':name', $name);
+        $STH->bindParam(':details', $detail);
+        $STH->bindParam(':entry', $entry);
         $STH->bindParam('date', $date);
         $STH->bindParam('time', $time);
         $STH->bindParam('status', $status);
@@ -227,7 +229,7 @@ class DbHandler
     public
     function getAllEvents()
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, date, time, status, visible FROM Events WHERE idVenue = :idVenue;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, time, status, visible FROM Events WHERE idVenue = :idVenue;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->execute();
 
@@ -239,7 +241,7 @@ class DbHandler
     public
     function getSingleEvent($idEvent)
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, date, time, status, visible FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, , details, entry, time, status, visible FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->bindParam(':idEvent', $idEvent);
         $STH->execute();
@@ -256,12 +258,15 @@ class DbHandler
     }
 
     public
-    function updateEvent($idEvent, $name, $datetime, $status, $visible)
+    function updateEvent($idEvent, $name, $date, $detail, $entry, $time, $status, $visible)
     {
-        $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, time = :time, status = :status, visible = :visible WHERE idEvents= :idEvent;");
+        $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry, time = :time, status = :status, visible = :visible WHERE idEvents= :idEvent;");
 
         $STH->bindParam(':name', $name);
-        $STH->bindParam(':datetime', $datetime);
+        $STH->bindParam(':date', $date);
+        $STH->bindParam(':detail', $detail);
+        $STH->bindParam(':entry', $entry);
+        $STH->bindParam(':time', $time);
         $STH->bindParam(':status', $status);
         $STH->bindParam(':visible', $visible);
         $STH->bindParam(':idEvent', $idEvent);
@@ -269,10 +274,6 @@ class DbHandler
 
         $affectedRows = $STH->rowCount();
 
-        /* if (count($bands) > 0) {
-             $result = $this->updateEventBands($bands);
-             return $affectedRows > 0 || $result;
-         }*/
         return $affectedRows > 0;
     }
 

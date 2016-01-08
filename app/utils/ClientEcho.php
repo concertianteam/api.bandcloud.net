@@ -67,7 +67,10 @@ class ClientEcho
 
             $tmp ["idEvent"] = $row ["idEvents"];
             $tmp ["name"] = $row ["name"];
-            $tmp ["datetime"] = $row ["datetime"];
+            $tmp ["detail"] = $row ["details"];
+            $tmp ["entry"] = $row ["entry"];
+            $tmp ["date"] = $row ["date"];
+            $tmp ["time"] = $row ["time"];
             $tmp ["status"] = $row ["status"];
             $tmp ["visible"] = $row ["visible"];
             $response ['events'] [] = $tmp;

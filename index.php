@@ -2,7 +2,7 @@
 mb_internal_encoding("UTF-8");
 
 header("Access-Control-Allow-Origin: *"); // docasne!!
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header("Access-Control-Allow-Methods: GET,PUT,POST,DELETE,OPTIONS");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Max-Age: 86400");
@@ -23,6 +23,7 @@ require_once(APP_ROOT . "/config/statusCodes.php");
 require_once(APP_ROOT . "/config/responseTypes.php");
 require_once(APP_ROOT . "/config/constants.php");
 require(APP_ROOT . "/libs/Slim/Slim.php");
+require (APP_ROOT . "/libs/PHPMailer/PHPMailerAutoload.php");
 
 \Slim\Slim::registerAutoloader();
 $app = new \Slim\Slim ();
@@ -159,14 +160,15 @@ $app->post('/auth', function () use ($app) {
     $response = array();
 
     $dbHandler = new DbHandler ();
-    $apiKey = SoapHandler::login($email, $password);
+    $auth = SoapHandler::login($email, $password);
     // check for correct email and password
-    if ($apiKey != null) {
+    if ($auth['apiKey'] != null) {
         // get Account by email
         $account = $dbHandler->getAccountByEmail($email);
         if ($account != NULL) {
             $response ["success"] = TRUE;
-            $response ['apiKey'] = $apiKey;
+            $response ['apiKey'] = $auth['apiKey'];
+            $response ['subscriptionId'] = $auth['subscriptionId'];
             $response ['name'] = $account ['name'];
             $response ['email'] = $account ['email'];
             $response ['urlPhoto'] = $account ['urlPhoto'];
@@ -208,11 +210,49 @@ $app->delete('/auth', array(
     // logout account
     $res = SoapHandler::logout($apiKey);
 
-    // chceck if logging out was successfull
+    // check if logging out was successfull
     if ($res) {
         // account was logged out
         $response ['success'] = TRUE;
         $response['message'] = "Successfully logged out.";
+        ClientEcho::echoResponse('SUCCESS', $response);
+    } else {
+        // unknown error occurred
+        $response ['success'] = FALSE;
+        $response ['message'] = "An error occurred. Please try again!";
+        ClientEcho::echoResponse(INTERNAL_SERVER_ERROR, $response);
+    }
+});
+
+/**
+ * Add subscription id
+ * url - /auth/subscription
+ * method - DELETE
+ * params - api_key
+ */
+$app->post('/auth/subscription', array(
+    'Validation',
+    'authenticate'
+), function () use ($app) {
+    $headers = apache_request_headers();
+    $validation = new Validation ();
+    $apiKey = $headers ['Authorization'];
+
+    $validation->verifyRequiredParams(array(
+        'subscriptionId'
+    ));
+
+    // reading post params
+    $subscriptionId = $app->request->post('subscriptionId');
+
+    // add subscription
+    $res = SoapHandler::addSubscription($apiKey, $subscriptionId);
+
+    // check if adding subscription was successful
+    if ($res) {
+        // successful
+        $response ['success'] = TRUE;
+        $response['message'] = "Subscription successfully added.";
         ClientEcho::echoResponse('SUCCESS', $response);
     } else {
         // unknown error occurred
@@ -276,6 +316,9 @@ $app->post('/events', array(
     $validation->verifyRequiredParams(array(
         'idVenue',
         'name',
+        'entry',
+        'date',
+        'time',
         'status',
         'visible'
     ));
@@ -283,13 +326,15 @@ $app->post('/events', array(
     // reading post params
     $idVenue = $app->request->post('idVenue');
     $name = $app->request->post('name');
+    $detail = $app->request->post('detail');
+    $entry = $app->request->post('entry');
     $date = $app->request->post('date');
     $time = $app->request->post('time');
     $status = $app->request->post('status');
     $visible = $app->request->post('visible');
     //$bands = ( array )$app->request->post('bands');
-
-    $eventId = $dbHandler->createEvent($idVenue, $name, $date, $time, $status, $visible);
+    if ($detail == null) $detail = '';
+    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $date, $time, $status, $visible);
 
     $response = array();
     if ($eventId != NULL) {
@@ -316,17 +361,21 @@ $app->post('/events/unregistered', function () use ($app) {
     $validation->verifyRequiredParams(array(
         'idVenue',
         'eventName',
+        'entry',
         'date',
-        'time'
+        'time',
     ));
 
     // reading post params
     $idVenue = $app->request->post('idVenue');
     $eventName = $app->request->post('eventName');
+    $detail = $app->request->post('detail');
+    $entry = $app->request->post('entry');
     $date = $app->request->post('date');
     $time = $app->request->post('time');
 
-    $eventId = $dbHandler->createEvent($idVenue, $eventName, $date, $time, 1, 0);
+    if ($detail == null) $detail = '';
+    $eventId = $dbHandler->createEvent($idVenue, $eventName, $detail, $entry, $date, $time, 1, 0);
 
     $response = array();
     if ($eventId != NULL) {
@@ -387,12 +436,18 @@ $app->put('/events/:id', array(
     // check for required params
     $validation->verifyRequiredParams(array(
         'name',
-        'datetime',
+        'date',
+        'time',
+        'detail',
+        'entry',
         'status',
         'visible'
     ));
     $name = $app->request->put('name');
-    $datetime = $app->request->put('datetime');
+    $date = $app->request->put('date');
+    $detail = $app->request->put('detail');
+    $entry = $app->request->put('entry');
+    $time = $app->request->put('time');
     $status = $app->request->put('status');
     $visible = $app->request->put('visible');
     //$bands = $app->request->put('bands');
@@ -401,7 +456,7 @@ $app->put('/events/:id', array(
     $response = array();
 
     // updating event
-    $result = $dbHandler->updateEvent($idEvent, $name, $datetime, $status, $visible /*, $bands*/);
+    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $time, $status, $visible);
     if ($result) {
         // event successfully updated
         $response ["success"] = TRUE;
@@ -753,4 +808,16 @@ $app->delete('/favourites/:id', array(
     }
     ClientEcho::echoResponse(OK, $response);
 });
+
+$app->options('/(:name+)', function () use ($app) {
+    echo 'true';
+});
+
+/*$app->options('/events/venue', function () use ($app) {
+    echo 'true';
+});
+$app->options('/events', function () use ($app) {
+    echo 'true';
+});*/
+
 $app->run();
