@@ -188,18 +188,22 @@ class DbHandler
 
     /* -------------------------------Account----------------------------------------- */
     /* -------------------------------Events------------------------------------------ */
-    public function createEvent($idVenue, $name, $detail, $entry, $date, $time, $status, $visible)
+    public function createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber)
     {
-        $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, date, time, status, visible, idVenue)
-				VALUES(:name,:details, :entry, :date, :time, :status, :visible, :idVenue)");
+        $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, imgUrl, date, time, status, visible, idVenue,  note, performerEmail, performerPhoneNumber)
+				VALUES(:name,:details, :entry, :imgUrl, :date, :time, :status, :visible, :idVenue, :notes, :performerEmail, :performerPhoneNumber)");
         $STH->bindParam(':name', $name);
         $STH->bindParam(':details', $detail);
         $STH->bindParam(':entry', $entry);
-        $STH->bindParam('date', $date);
-        $STH->bindParam('time', $time);
-        $STH->bindParam('status', $status);
-        $STH->bindParam('visible', $visible);
-        $STH->bindParam('idVenue', $idVenue);
+        $STH->bindParam(':imgUrl', $imgUrl);
+        $STH->bindParam(':date', $date);
+        $STH->bindParam(':time', $time);
+        $STH->bindParam(':status', $status);
+        $STH->bindParam(':visible', $visible);
+        $STH->bindParam(':idVenue', $idVenue);
+        $STH->bindParam(':note', $notes);
+        $STH->bindParam(':performerEmail', $performerEmail);
+        $STH->bindParam(':performerPhoneNumber', $performerPhoneNumber);
 
         if ($STH->execute()) {
             // event created
@@ -229,8 +233,32 @@ class DbHandler
     public
     function getAllEvents()
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, time, status, visible FROM Events WHERE idVenue = :idVenue;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, imgUrl, time, status, visible,  note,
+            performerEmail, performerPhoneNumber, (SELECT COUNT(*) FROM ViewCounter WHERE e.idEvents = idEvent) as views
+            FROM Events e  WHERE idVenue = :idVenue;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
+        $STH->execute();
+
+        $events = $STH->fetchAll();
+
+        return $events;
+    }
+
+    public function getAllEventsInMonth($month)
+    {
+        $STH = $this->connection->prepare("SELECT idEvents as id, v.idVenues as venueId, e.name as eventName, date, time,
+            e.visible, e.details, e.entry, e.imgUrl, v.name as venueName,
+            v.email as venueEmail, v.urlPhoto, a.address_1, a.city, a.state, a.zip
+            FROM Events e
+            INNER JOIN Venues v
+            ON e.idVenue = v.idVenues
+            INNER JOIN Address a
+            ON a.idAddress = v.idAddress
+            WHERE visible = 1
+            AND MONTH(date) = :month
+            AND YEAR(date) = YEAR(CURDATE())
+            ORDER BY date, time;");
+        $STH->bindParam(':month', $month);
         $STH->execute();
 
         $events = $STH->fetchAll();
@@ -241,34 +269,48 @@ class DbHandler
     public
     function getSingleEvent($idEvent)
     {
-        $STH = $this->connection->prepare("SELECT idEvents, name, date, , details, entry, time, status, visible FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
+        $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, imgUrl, time, status, visible,
+              note, performerEmail, performerPhoneNumber FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->bindParam(':idEvent', $idEvent);
         $STH->execute();
 
         $event = $STH->fetchAll();
 
-        //$STH = $this->connection->prepare("SELECT Bands.idBands, name, email, role, reward, extras, technicalNeeds, Notes FROM Bands INNER JOIN Events_Bands
-        //		ON Bands.idBands = Events_Bands.idBands WHERE idEvents = :idEvent");
-        //$STH->bindParam(':idEvent', $idEvent);
-        //$STH->execute();
-
-        //$event [0] ['bands'] = $STH->fetchAll();
         return $event;
     }
 
     public
-    function updateEvent($idEvent, $name, $date, $detail, $entry, $time, $status, $visible)
+    function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber)
     {
-        $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry, time = :time, status = :status, visible = :visible WHERE idEvents= :idEvent;");
+        $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry,
+            imgUrl = :imgUrl time = :time, status = :status, visible = :visible, note = :note, performerEmail = :performerEmail,
+            performerPhoneNumber = :performerPhoneNumber WHERE idEvents= :idEvent;");
 
         $STH->bindParam(':name', $name);
         $STH->bindParam(':date', $date);
         $STH->bindParam(':detail', $detail);
         $STH->bindParam(':entry', $entry);
+        $STH->bindParam(':imgUrl', $imgUrl);
         $STH->bindParam(':time', $time);
         $STH->bindParam(':status', $status);
         $STH->bindParam(':visible', $visible);
+        $STH->bindParam(':idEvent', $idEvent);
+        $STH->bindParam(':note', $notes);
+        $STH->bindParam(':performerEmail', $performerEmail);
+        $STH->bindParam(':performerPhoneNumber', $performerPhoneNumber);
+        $STH->execute();
+
+        $affectedRows = $STH->rowCount();
+
+        return $affectedRows > 0;
+    }
+
+    public function updateEventImage($idEvent, $imgUrl)
+    {
+        $STH = $this->connection->prepare("UPDATE Events SET imgUrl = :imgUrl WHERE idEvents= :idEvent;");
+
+        $STH->bindParam(':imgUrl', $imgUrl);
         $STH->bindParam(':idEvent', $idEvent);
         $STH->execute();
 

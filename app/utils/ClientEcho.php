@@ -28,15 +28,15 @@ class ClientEcho
     static function buildResponse($result, $type)
     {
         $response ["success"] = TRUE;
-        // looping through result and preparing order array
+        // looping through result and preparing array
         if (!count($result) == 0) {
             switch ($type) {
                 case EVENT :
                     $response = ClientEcho::buildEventsResponse($result);
                     break;
-                /*case BAND :
-                    $response = ClientEcho::buildBandsResponse ( $result );
-                    break;*/
+                case MONTH :
+                    $response = ClientEcho::buildMonthEventsResponse($result);
+                    break;
                 case VENUE :
                     $response = ClientEcho::buildVenuesResponse($result);
                     break;
@@ -69,26 +69,20 @@ class ClientEcho
             $tmp ["name"] = $row ["name"];
             $tmp ["detail"] = $row ["details"];
             $tmp ["entry"] = $row ["entry"];
+            $tmp ["imgUrl"] = $row ["imgUrl"];
             $tmp ["date"] = $row ["date"];
             $tmp ["time"] = $row ["time"];
             $tmp ["status"] = $row ["status"];
             $tmp ["visible"] = $row ["visible"];
+            $tmp ["note"] = $row ["note"];
+            $tmp ["performerEmail"] = $row ["performerEmail"];
+            $tmp ["performerPhoneNumber"] = $row ["performerPhoneNumber"];
+
+            if (isset($row["views"])) {
+                $tmp ["views"] = $row ["views"];
+            }
+
             $response ['events'] [] = $tmp;
-
-            /*if (isset ( $row ['bands'] )) {
-                foreach ( $row ['bands'] as $bandRow ) {
-                    $tmp ["idBand"] = $bandRow ["idBands"];
-                    $tmp ["name"] = $bandRow ["name"];
-                    $tmp ["email"] = $bandRow ["email"];
-                    $tmp ["role"] = $bandRow ["role"];
-                    $tmp ["reward"] = $bandRow ["reward"];
-                    $tmp ["extras"] = $bandRow ["extras"];
-                    $tmp ["technicalNeeds"] = $bandRow ["technicalNeeds"];
-                    $tmp ["notes"] = $bandRow ["Notes"];
-
-                    $response ['events'] ['bands'] [] = $tmp;
-                }
-            }*/
         }
 
         return $response;
@@ -155,6 +149,35 @@ class ClientEcho
         }
         return $response;
     }
+
+    private static function buildMonthEventsResponse($result)
+    {
+        foreach ($result as $row) {
+            $tmp = array();
+
+            $tmp ["id"] = $row ["id"];
+            $tmp ["venueId"] = $row ["venueId"];
+            $tmp ["eventName"] = $row ["eventName"];
+            $tmp ["date"] = $row ["date"];
+            //$tmp ["stringDate"] = ClientEcho::formatDate($row["date"]);
+            $tmp ["time"] = $row ["time"];
+            $tmp ["detail"] = $row ["details"];
+            $tmp ["entry"] = $row ["entry"];
+            $tmp ["imgUrl"] = $row ["imgUrl"];
+            $tmp ["visible"] = $row ["visible"];
+            $tmp ["venueName"] = $row ["venueName"];
+            $tmp ["venueEmail"] = $row["venueEmail"];
+            $tmp ["urlPhoto"] = $row ["urlPhoto"];
+            $tmp ["address"] = $row['address_1'];
+            $tmp ["city"] = $row ["city"];
+            $tmp ["state"] = $row ["state"];
+            $tmp ["zip"] = $row ["zip"];
+
+            $response ['events'] [] = $tmp;
+        }
+        return $response;
+    }
+
     /*
      * private static function sortBands($idEvent, $bands) {
      * $tmp = array ();

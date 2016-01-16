@@ -23,7 +23,7 @@ require_once(APP_ROOT . "/config/statusCodes.php");
 require_once(APP_ROOT . "/config/responseTypes.php");
 require_once(APP_ROOT . "/config/constants.php");
 require(APP_ROOT . "/libs/Slim/Slim.php");
-require (APP_ROOT . "/libs/PHPMailer/PHPMailerAutoload.php");
+require(APP_ROOT . "/libs/PHPMailer/PHPMailerAutoload.php");
 
 \Slim\Slim::registerAutoloader();
 $app = new \Slim\Slim ();
@@ -328,13 +328,22 @@ $app->post('/events', array(
     $name = $app->request->post('name');
     $detail = $app->request->post('detail');
     $entry = $app->request->post('entry');
+    $imgUrl = $app->request->post('imgUrl');
     $date = $app->request->post('date');
     $time = $app->request->post('time');
     $status = $app->request->post('status');
     $visible = $app->request->post('visible');
-    //$bands = ( array )$app->request->post('bands');
+    $notes = $app->request->post('notes');
+    $performerEmail = $app->request->post('performerEmail');
+    $performerPhoneNumber = $app->request->post('performerPhoneNumber');
+
     if ($detail == null) $detail = '';
-    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $date, $time, $status, $visible);
+    if ($imgUrl == null) $imgUrl = '';
+    //if ($notes == null) $notes = '';
+    //if ($performerEmail == null) $performerEmail = '';
+    //if ($performerPhoneNumber == null) $performerPhoneNumber = '';
+
+    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber);
 
     $response = array();
     if ($eventId != NULL) {
@@ -372,10 +381,12 @@ $app->post('/events/unregistered', function () use ($app) {
     $detail = $app->request->post('detail');
     $entry = $app->request->post('entry');
     $date = $app->request->post('date');
+    $imgUrl = $app->request->post('imgUrl');
     $time = $app->request->post('time');
 
     if ($detail == null) $detail = '';
-    $eventId = $dbHandler->createEvent($idVenue, $eventName, $detail, $entry, $date, $time, 1, 0);
+    if ($imgUrl == null) $imgUrl = '';
+    $eventId = $dbHandler->createEvent($idVenue, $eventName, $detail, $entry, $imgUrl, $date, $time, 1, 0);
 
     $response = array();
     if ($eventId != NULL) {
@@ -404,6 +415,23 @@ $app->get('/events', array(
     $result = $dbHandler->getAllEvents();
 
     ClientEcho::buildResponse($result, EVENT);
+});
+
+/**
+ * Listing all events in month
+ * url - /events/month/:month
+ * method - GET
+ */
+$app->get('/events/month/:month', array(
+    'Validation',
+    'authenticate'
+), function ($month) {
+    $dbHandler = new DbHandler ();
+
+    // fetching all events
+    $result = $dbHandler->getAllEventsInMonth($month);
+
+    ClientEcho::buildResponse($result, MONTH);
 });
 
 /**
@@ -447,16 +475,58 @@ $app->put('/events/:id', array(
     $date = $app->request->put('date');
     $detail = $app->request->put('detail');
     $entry = $app->request->put('entry');
+    $imgUrl = $app->request->put('imgUrl');
     $time = $app->request->put('time');
     $status = $app->request->put('status');
     $visible = $app->request->put('visible');
+    $notes = $app->request->post('notes');
+    $performerEmail = $app->request->post('performerEmail');
+    $performerPhoneNumber = $app->request->post('performerPhoneNumber');
     //$bands = $app->request->put('bands');
+
+    $dbHandler = new DbHandler ();
+    $response = array();
+    if ($detail == null) $detail = '';
+    if ($imgUrl == null) $imgUrl = '';
+
+    // updating event                ($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible)
+    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber);
+    if ($result) {
+        // event successfully updated
+        $response ["success"] = TRUE;
+        $response ["message"] = "Event updated successfully";
+    } else {
+        // event failed to update
+        $response ["success"] = FALSE;
+        $response ["message"] = "Event failed to update. Please try again!";
+    }
+    ClientEcho::echoResponse(OK, $response);
+});
+
+/**
+ * Update event image
+ * url - /events/:id/image
+ * method - PUT
+ * params - imgUrl, idEvent
+ */
+$app->put('/events/:id/image', array(
+    'Validation',
+    'authenticate'
+), function ($idEvent) use ($app) {
+    $validation = new Validation ();
+    // check for required params
+    $validation->verifyRequiredParams(array(
+        'imgurl'
+    ));
+
+    $imgUrl = $app->request->put('imgurl');
 
     $dbHandler = new DbHandler ();
     $response = array();
 
     // updating event
-    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $time, $status, $visible);
+    $result = $dbHandler->updateEventImage($idEvent, $imgUrl);
+
     if ($result) {
         // event successfully updated
         $response ["success"] = TRUE;
