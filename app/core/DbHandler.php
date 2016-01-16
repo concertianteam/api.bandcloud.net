@@ -284,7 +284,7 @@ class DbHandler
     function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber)
     {
         $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry,
-            imgUrl = :imgUrl time = :time, status = :status, visible = :visible, note = :note, performerEmail = :performerEmail,
+            imgUrl = :imgUrl, time = :time, status = :status, visible = :visible, note = :note, performerEmail = :performerEmail,
             performerPhoneNumber = :performerPhoneNumber WHERE idEvents= :idEvent;");
 
         $STH->bindParam(':name', $name);

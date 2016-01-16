@@ -333,7 +333,7 @@ $app->post('/events', array(
     $time = $app->request->post('time');
     $status = $app->request->post('status');
     $visible = $app->request->post('visible');
-    $notes = $app->request->post('notes');
+    $notes = $app->request->post('note');
     $performerEmail = $app->request->post('performerEmail');
     $performerPhoneNumber = $app->request->post('performerPhoneNumber');
 
@@ -479,7 +479,7 @@ $app->put('/events/:id', array(
     $time = $app->request->put('time');
     $status = $app->request->put('status');
     $visible = $app->request->put('visible');
-    $notes = $app->request->post('notes');
+    $notes = $app->request->post('note');
     $performerEmail = $app->request->post('performerEmail');
     $performerPhoneNumber = $app->request->post('performerPhoneNumber');
     //$bands = $app->request->put('bands');
