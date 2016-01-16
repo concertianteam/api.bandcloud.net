@@ -326,7 +326,7 @@ $app->post('/events', array(
     // reading post params
     $idVenue = $app->request->post('idVenue');
     $name = $app->request->post('name');
-    $detail = $app->request->post('detail');
+        $detail = $app->request->post('detail');
     $entry = $app->request->post('entry');
     $imgUrl = $app->request->post('imgUrl');
     $date = $app->request->post('date');
@@ -468,8 +468,12 @@ $app->put('/events/:id', array(
         'time',
         'detail',
         'entry',
+        'imgUrl',
         'status',
-        'visible'
+        'visible',
+        'note',
+        'performerEmail',
+        'performerPhoneNumber'
     ));
     $name = $app->request->put('name');
     $date = $app->request->put('date');
@@ -479,9 +483,9 @@ $app->put('/events/:id', array(
     $time = $app->request->put('time');
     $status = $app->request->put('status');
     $visible = $app->request->put('visible');
-    $notes = $app->request->post('note');
-    $performerEmail = $app->request->post('performerEmail');
-    $performerPhoneNumber = $app->request->post('performerPhoneNumber');
+    $notes = $app->request->put('note');
+    $performerEmail = $app->request->put('performerEmail');
+    $performerPhoneNumber = $app->request->put('performerPhoneNumber');
     //$bands = $app->request->put('bands');
 
     $dbHandler = new DbHandler ();
