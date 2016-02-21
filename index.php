@@ -16,12 +16,15 @@ require_once(APP_ROOT . "/app/core/Database.php");
 require_once(APP_ROOT . "/app/core/DbHandler.php");
 require_once(APP_ROOT . "/app/core/SoapHandler.php");
 require_once(APP_ROOT . "/app/core/MySoapClient.php");
+require_once(APP_ROOT . "/app/core/TicketsSoapHandler.php");
+require_once(APP_ROOT . "/app/core/TicketsSoapClient.php");
 require_once(APP_ROOT . "/app/utils/ClientEcho.php");
 require_once(APP_ROOT . "/app/utils/Validation.php");
 require_once(APP_ROOT . "/app/utils/PassHash.php");
 require_once(APP_ROOT . "/config/statusCodes.php");
 require_once(APP_ROOT . "/config/responseTypes.php");
 require_once(APP_ROOT . "/config/constants.php");
+require_once(APP_ROOT . "/app/utils/MonthNames_en.php");
 require(APP_ROOT . "/libs/Slim/Slim.php");
 require(APP_ROOT . "/libs/PHPMailer/PHPMailerAutoload.php");
 
@@ -326,7 +329,7 @@ $app->post('/events', array(
     // reading post params
     $idVenue = $app->request->post('idVenue');
     $name = $app->request->post('name');
-        $detail = $app->request->post('detail');
+    $detail = $app->request->post('detail');
     $entry = $app->request->post('entry');
     $imgUrl = $app->request->post('imgUrl');
     $date = $app->request->post('date');
@@ -336,6 +339,7 @@ $app->post('/events', array(
     $notes = $app->request->post('note');
     $performerEmail = $app->request->post('performerEmail');
     $performerPhoneNumber = $app->request->post('performerPhoneNumber');
+    $youtubeVideo = $app->request->post('youtubeVideo');
 
     if ($detail == null) $detail = '';
     if ($imgUrl == null) $imgUrl = '';
@@ -343,7 +347,7 @@ $app->post('/events', array(
     //if ($performerEmail == null) $performerEmail = '';
     //if ($performerPhoneNumber == null) $performerPhoneNumber = '';
 
-    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber);
+    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo);
 
     $response = array();
     if ($eventId != NULL) {
@@ -435,6 +439,50 @@ $app->get('/events/month/:month', array(
 });
 
 /**
+ * Listing all venue events in month
+ * url - /events
+ * method - GET
+ */
+$app->post('/events/venue/month/:month', function ($month) use ($app) {
+    $validation = new Validation ();
+    $validation->verifyRequiredParams(array(
+        'idVenue'
+    ));
+    // reading post params
+    $idVenue = $app->request->post('idVenue');
+
+
+    $dbHandler = new DbHandler ();
+
+    // fetching all events
+    $result = $dbHandler->getAllVenueEvents($idVenue, $month);
+
+    ClientEcho::buildResponse($result, MONTH);
+});
+
+/**
+ * Listing all city events in month
+ * url - /events/city
+ * method - POST
+ */
+$app->post('/events/city/month/:month', function ($month) use ($app) {
+    $validation = new Validation ();
+    $validation->verifyRequiredParams(array(
+        'city'
+    ));
+
+    // reading post params
+    $city = $app->request->post('city');
+
+    $dbHandler = new DbHandler ();
+
+    // fetching all events
+    $result = $dbHandler->getCityEvents($city, $month);
+
+    ClientEcho::buildResponse($result, MONTH);
+});
+
+/**
  * Listing single event
  * url - /events/:id
  * method - GET
@@ -466,14 +514,9 @@ $app->put('/events/:id', array(
         'name',
         'date',
         'time',
-        'detail',
         'entry',
-        'imgUrl',
         'status',
-        'visible',
-        'note',
-        'performerEmail',
-        'performerPhoneNumber'
+        'visible'
     ));
     $name = $app->request->put('name');
     $date = $app->request->put('date');
@@ -486,6 +529,7 @@ $app->put('/events/:id', array(
     $notes = $app->request->put('note');
     $performerEmail = $app->request->put('performerEmail');
     $performerPhoneNumber = $app->request->put('performerPhoneNumber');
+    $youtubeVideo = $app->request->post('youtubeVideo');
     //$bands = $app->request->put('bands');
 
     $dbHandler = new DbHandler ();
@@ -494,7 +538,7 @@ $app->put('/events/:id', array(
     if ($imgUrl == null) $imgUrl = '';
 
     // updating event                ($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible)
-    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber);
+    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo);
     if ($result) {
         // event successfully updated
         $response ["success"] = TRUE;

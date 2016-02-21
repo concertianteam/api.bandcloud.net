@@ -71,16 +71,20 @@ class ClientEcho
             $tmp ["entry"] = $row ["entry"];
             $tmp ["imgUrl"] = $row ["imgUrl"];
             $tmp ["date"] = $row ["date"];
+            $tmp ["stringDate"] = ClientEcho::formatDate($row["date"]);
             $tmp ["time"] = $row ["time"];
             $tmp ["status"] = $row ["status"];
             $tmp ["visible"] = $row ["visible"];
             $tmp ["note"] = $row ["note"];
             $tmp ["performerEmail"] = $row ["performerEmail"];
             $tmp ["performerPhoneNumber"] = $row ["performerPhoneNumber"];
+            $tmp ["youtubeVideo"] = $row ["youtubeVideo"];
 
             if (isset($row["views"])) {
                 $tmp ["views"] = $row ["views"];
             }
+
+            $tmp['tickets'] = TicketsSoapHandler::getTickets($row ["idEvents"]);
 
             $response ['events'] [] = $tmp;
         }
@@ -159,7 +163,7 @@ class ClientEcho
             $tmp ["venueId"] = $row ["venueId"];
             $tmp ["eventName"] = $row ["eventName"];
             $tmp ["date"] = $row ["date"];
-            //$tmp ["stringDate"] = ClientEcho::formatDate($row["date"]);
+            $tmp ["stringDate"] = ClientEcho::formatDate($row["date"]);
             $tmp ["time"] = $row ["time"];
             $tmp ["detail"] = $row ["details"];
             $tmp ["entry"] = $row ["entry"];
@@ -172,31 +176,48 @@ class ClientEcho
             $tmp ["city"] = $row ["city"];
             $tmp ["state"] = $row ["state"];
             $tmp ["zip"] = $row ["zip"];
+            $tmp ["youtubeVideo"] = $row ["youtubeVideo"];
+            $tmp['tickets'] = TicketsSoapHandler::getTickets($row ["id"]);
 
             $response ['events'] [] = $tmp;
         }
         return $response;
     }
 
-    /*
-     * private static function sortBands($idEvent, $bands) {
-     * $tmp = array ();
-     * $result = array ();
-     *
-     * foreach ( $bands as $band ) {
-     * if ($band ['idEvent'] != $idEvent) {
-     * $tmp [] ['bands'] = array (
-     * 'idBand' => $row ["idBand"],
-     * 'role' => $row ["role"],
-     * 'reward' => $row ["reward"],
-     * 'extras' => $row ["extras"],
-     * 'technicalNeeds' => $band ['technicalNeeds'],
-     * 'note' => $band ['note']
-     * );
-     * array_push ( $result, $tmp );
-     * }
-     * }
-     * return $result;
-     * }
-     */
+    private static function formatDate($date)
+    {
+        $dateParts = explode("-", $date);
+        return $dateParts[0] . "-" . ClientEcho::monthNumberToName($dateParts[1]) . "-" . $dateParts[2];
+    }
+
+    private static function monthNumberToName($month)
+    {
+        switch ($month) {
+            case 1:
+                return JANUARY;
+            case 2:
+                return FEBRUARY;
+            case 3:
+                return MARCH;
+            case 4:
+                return APRIL;
+            case 5:
+                return MAY;
+            case 6:
+                return JUNE;
+            case 7:
+                return JULY;
+            case 8:
+                return AUGUST;
+            case 9:
+                return SEPTEMBER;
+            case 10:
+                return OCTOBER;
+            case 11:
+                return NOVEMBER;
+            case 12:
+                return DECEMBER;
+
+        }
+    }
 }

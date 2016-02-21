@@ -118,13 +118,19 @@ class Validation
 
         $confirm_url = "https://api.concertian.com/confirmreg.php?code=";
 
-        $message = 'Dobrý deň ' . $name . ',<br>Ďakujeme za registráciu v systéme concertian LITE, prosím pre dokončenie registrácie kliknite dokončiť<br>
-        <a href= \'' . $confirm_url . $confirmCode . ' \' style="display: block; width: 200px; text-align: center; font-size: 1.2em; margin-left:20%; height: 30px; border-radius: 4px; color: #fff;
-        text-decoration: none; background: #ffbb33 ; box-sizing: border-box;" >DOKONČIŤ</a><br><br>Regards,<br>Webmaster<br> <b>Concertian</b>.com\'';
+        $messageHTML = '<span class="outer" style="display: block; background: #f5f5f5; width : 100%; height: 80%; text-align: center;
+            box-sizing: border-box; padding: 5%; font-size: 1.2em; font-weight: 600; border-radius: 10px;"><span class="heading" style="display: block">
+            Dobrý deň <strong style="font-weight: 100;">' . $name . '</strong>,<br>Ďakujeme za registráciu v systéme concertian LITE, prosím pre dokončenie
+            registrácie kliknite dokončiť<br></span><span class="buttonWrapper" style="display: block; text-align: center; margin-top: 8%;">
+            <a href="' . $confirm_url . $confirmCode . '" style="display: block; width: 60%; margin-left: 18%; text-align: center; font-size: 1.5em; border-radius: 4px; color: #fff;
+            text-decoration: none; background: #ffbb33 ; box-sizing: border-box; padding: 2% 0%; font-weight: 100; cursor: poiter;" >Dokončiť</a>';
+
+        $messagePlain = 'Dobrý deň ' . $name . '
+            Dobrý deň ' . $name . ' Ďakujeme za registráciu v systéme concertian LITE, prosím pre dokončenie registrácie skopírujte nasledujúcu adresu do Vášho prehliadača: ' . $confirm_url . $confirmCode;
 
         $mail->Subject = 'Your registration with Concertian';
-        $mail->Body = $message;
-        //$mail->AltBody = 'This is the body in plain text for non - HTML mail clients';
+        $mail->Body = $messageHTML;
+        $mail->AltBody = $messagePlain;
 
         if (!$mail->send()) {
             return false;

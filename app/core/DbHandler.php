@@ -188,10 +188,11 @@ class DbHandler
 
     /* -------------------------------Account----------------------------------------- */
     /* -------------------------------Events------------------------------------------ */
-    public function createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber)
+    public function createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo)
     {
-        $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, imgUrl, date, time, status, visible, idVenue,  note, performerEmail, performerPhoneNumber)
-				VALUES(:name,:details, :entry, :imgUrl, :date, :time, :status, :visible, :idVenue, :notes, :performerEmail, :performerPhoneNumber)");
+        $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, imgUrl, date, time, status, visible, idVenue, note, performerEmail, performerPhoneNumber, youtubeVideo)
+				VALUES(:name,:details, :entry, :imgUrl, :date, :time, :status, :visible, :idVenue, :notes, :performerEmail, :performerPhoneNumber, :youtubeVideo)");
+
         $STH->bindParam(':name', $name);
         $STH->bindParam(':details', $detail);
         $STH->bindParam(':entry', $entry);
@@ -201,27 +202,16 @@ class DbHandler
         $STH->bindParam(':status', $status);
         $STH->bindParam(':visible', $visible);
         $STH->bindParam(':idVenue', $idVenue);
-        $STH->bindParam(':note', $notes);
+        $STH->bindParam(':notes', $notes);
         $STH->bindParam(':performerEmail', $performerEmail);
         $STH->bindParam(':performerPhoneNumber', $performerPhoneNumber);
+        $STH->bindParam(':youtubeVideo', $youtubeVideo);
 
         if ($STH->execute()) {
             // event created
             // assign bands to event
             $eventId = $this->connection->lastInsertId();
 
-            /*foreach ($bandsArray as $band) {
-                $STH = $this->connection->prepare("INSERT INTO Events_Bands (idEvents, idBands, role, reward, extras, technicalNeeds, Notes)
-							VALUES (:idEvent, :idBand, :role, :reward, :extras, :technicalNeeds, :notes)");
-                $STH->bindParam(':idEvent', $eventId);
-                $STH->bindParam(':idBand', $band ['idBand']);
-                $STH->bindParam(':role', $band ['role']);
-                $STH->bindParam(':reward', $band ['reward']);
-                $STH->bindParam(':extras', $band ['extras']);
-                $STH->bindParam(':technicalNeeds', $band ['technicalNeeds']);
-                $STH->bindParam(':notes', $band ['notes']);
-                $STH->execute();
-            }*/
             // returns ID of event
             return $eventId;
         } else {
@@ -234,7 +224,7 @@ class DbHandler
     function getAllEvents()
     {
         $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, imgUrl, time, status, visible,  note,
-            performerEmail, performerPhoneNumber, (SELECT COUNT(*) FROM ViewCounter WHERE e.idEvents = idEvent) as views
+            performerEmail, performerPhoneNumber, youtubeVideo, (SELECT COUNT(*) FROM ViewCounter WHERE e.idEvents = idEvent) as views
             FROM Events e  WHERE idVenue = :idVenue;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->execute();
@@ -247,7 +237,7 @@ class DbHandler
     public function getAllEventsInMonth($month)
     {
         $STH = $this->connection->prepare("SELECT idEvents as id, v.idVenues as venueId, e.name as eventName, date, time,
-            e.visible, e.details, e.entry, e.imgUrl, v.name as venueName,
+            e.visible, e.details, e.entry, e.imgUrl, youtubeVideo, v.name as venueName,
             v.email as venueEmail, v.urlPhoto, a.address_1, a.city, a.state, a.zip
             FROM Events e
             INNER JOIN Venues v
@@ -266,11 +256,57 @@ class DbHandler
         return $events;
     }
 
+    public function getAllVenueEvents($idVenue, $month)
+    {
+        $STH = $this->connection->prepare("SELECT idEvents as id, v.idVenues as venueId, e.name as eventName, date, time,
+            e.visible, e.details, e.entry, e.imgUrl, youtubeVideo, v.name as venueName,
+            v.email as venueEmail, v.urlPhoto, a.address_1, a.city, a.state, a.zip
+            FROM Events e
+            INNER JOIN Venues v
+            ON e.idVenue = v.idVenues
+            INNER JOIN Address a
+            ON a.idAddress = v.idAddress
+            WHERE visible = 1
+            AND v.idVenues = :idVenue
+            AND MONTH(date) = :month
+            AND YEAR(date) = YEAR(CURDATE())
+            ORDER BY date, time;");
+        $STH->bindValue(':idVenue', $idVenue);
+        $STH->bindValue(':month', $month);
+        $STH->execute();
+        $events = $STH->fetchAll();
+
+        return $events;
+    }
+
+    public function getCityEvents($city, $month)
+    {
+        $STH = $this->connection->prepare("SELECT idEvents as id, v.idVenues as venueId, e.name as eventName, date, time,
+            e.visible, e.details, e.entry, e.imgUrl, youtubeVideo, v.name as venueName,
+            v.email as venueEmail, v.urlPhoto, a.address_1, a.city, a.state, a.zip
+            FROM Events e
+            INNER JOIN Venues v
+            ON e.idVenue = v.idVenues
+            INNER JOIN Address a
+            ON a.idAddress = v.idAddress
+            WHERE visible = 1
+            AND LOWER(a.city) = LOWER(:city)
+            AND MONTH(date) = :month
+            AND YEAR(date) = YEAR(CURDATE())
+            ORDER BY date, time;");
+        $STH->bindValue(':city', $city);
+        $STH->bindValue(':month', $month);
+        $STH->execute();
+        $events = $STH->fetchAll();
+
+        return $events;
+    }
+
     public
     function getSingleEvent($idEvent)
     {
         $STH = $this->connection->prepare("SELECT idEvents, name, date, details, entry, imgUrl, time, status, visible,
-              note, performerEmail, performerPhoneNumber FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
+              note, performerEmail, performerPhoneNumber, youtubeVideo FROM Events WHERE idVenue = :idVenue AND idEvents = :idEvent;");
         $STH->bindParam(':idVenue', Validation::$idVenue);
         $STH->bindParam(':idEvent', $idEvent);
         $STH->execute();
@@ -281,11 +317,30 @@ class DbHandler
     }
 
     public
-    function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber)
+    function getTicketInfo($idEvent)
+    {
+        $STH = $this->connection->prepare("SELECT e.name as eventName, DATE_FORMAT(date,'%d.%m.%Y')as date,
+            DATE_FORMAT(time,'%H:%m') as time, v.name as venueName, a.address_1 as street, a.city, a.zip
+            FROM Events e
+            INNER JOIN Venues v
+            ON e.idVenue = v.idVenues
+            INNER JOIN Address a
+            ON a.idAddress = v.idAddress
+            WHERE e.idEvents = :idEvent;");
+        $STH->bindParam(':idEvent', $idEvent);
+        $STH->execute();
+
+        $event = $STH->fetch();
+
+        return $event;
+    }
+
+    public
+    function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo)
     {
         $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry,
             imgUrl = :imgUrl, time = :time, status = :status, visible = :visible, note = :note, performerEmail = :performerEmail,
-            performerPhoneNumber = :performerPhoneNumber WHERE idEvents= :idEvent;");
+            performerPhoneNumber = :performerPhoneNumber, youtubeVideo = :youtubeVideo WHERE idEvents= :idEvent;");
 
         $STH->bindParam(':name', $name);
         $STH->bindParam(':date', $date);
@@ -299,6 +354,7 @@ class DbHandler
         $STH->bindParam(':note', $notes);
         $STH->bindParam(':performerEmail', $performerEmail);
         $STH->bindParam(':performerPhoneNumber', $performerPhoneNumber);
+        $STH->bindParam(':youtubeVideo', $youtubeVideo);
         $STH->execute();
 
         $affectedRows = $STH->rowCount();
