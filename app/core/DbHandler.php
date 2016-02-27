@@ -188,7 +188,7 @@ class DbHandler
 
     /* -------------------------------Account----------------------------------------- */
     /* -------------------------------Events------------------------------------------ */
-    public function createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo)
+    public function createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo, $category)
     {
         $STH = $this->connection->prepare("INSERT INTO Events(name, details, entry, imgUrl, date, time, status, visible, idVenue, note, performerEmail, performerPhoneNumber, youtubeVideo)
 				VALUES(:name,:details, :entry, :imgUrl, :date, :time, :status, :visible, :idVenue, :notes, :performerEmail, :performerPhoneNumber, :youtubeVideo)");
@@ -209,11 +209,10 @@ class DbHandler
 
         if ($STH->execute()) {
             // event created
-            // assign bands to event
             $eventId = $this->connection->lastInsertId();
-
-            // returns ID of event
-            return $eventId;
+            if ($this->assignCategory($eventId, $category))
+                return $eventId; // returns ID of event
+            return NULL;
         } else {
             // event failed to create
             return NULL;
@@ -336,7 +335,7 @@ class DbHandler
     }
 
     public
-    function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo)
+    function updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo, $category)
     {
         $STH = $this->connection->prepare("UPDATE Events SET name = :name, date = :date, details = :detail, entry = :entry,
             imgUrl = :imgUrl, time = :time, status = :status, visible = :visible, note = :note, performerEmail = :performerEmail,
@@ -355,11 +354,10 @@ class DbHandler
         $STH->bindParam(':performerEmail', $performerEmail);
         $STH->bindParam(':performerPhoneNumber', $performerPhoneNumber);
         $STH->bindParam(':youtubeVideo', $youtubeVideo);
-        $STH->execute();
 
-        $affectedRows = $STH->rowCount();
-
-        return $affectedRows > 0;
+        if ($STH->execute())
+            return $this->updateCategory($idEvent, $category);
+        return false;
     }
 
     public function updateEventImage($idEvent, $imgUrl)
@@ -419,6 +417,50 @@ class DbHandler
     }
 
     /* -------------------------------Events------------------------------------------ */
+    /* -------------------------------Category------------------------------------------ */
+
+    private function assignCategory($eventId, $categoryId)
+    {
+        $STH = $this->connection->prepare("INSERT INTO EventCategory(idEvent, idCategory)VALUES(:idEvent, :idCategory)");
+        $STH->bindParam(':idEvent', $eventId);
+        $STH->bindParam(':idCategory', $categoryId);
+
+        if ($STH->execute())
+            return true;
+        return false;
+    }
+
+    private function updateCategory($eventId, $categoryId)
+    {
+        $STH = $this->connection->prepare("UPDATE EventCategory SET idCategory = :idCategory WHERE idEvents= :idEvent;");
+
+        $STH->bindParam(':idCategory', $categoryId);
+        $STH->bindParam(':idEvent', $eventId);
+
+        if ($STH->execute())
+            return true;
+        return false;
+    }
+
+    public function getCategory($eventId)
+    {
+        $STH = $this->connection->prepare("SELECT idEvent, e.idCategory, category FROM EventCategory e INNER JOIN CategoryList c
+                        ON e.idCategory = c.idCategory
+                        WHERE idEvent = :idEvent");
+        $STH->bindParam(':idEvent', $eventId);
+        $STH->execute();
+
+        return $STH->fetch();
+    }
+
+    private function getCategoryList()
+    {
+        $STH = $this->connection->prepare("SELECT * FROM CategoryList");
+        $STH->execute();
+
+        return $STH->fetchAll();
+    }
+    /* -------------------------------Category------------------------------------------ */
     /* -------------------------------Bands------------------------------------------
     public
     function createBand($name, $email)

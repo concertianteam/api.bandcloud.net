@@ -83,7 +83,7 @@ class ClientEcho
             if (isset($row["views"])) {
                 $tmp ["views"] = $row ["views"];
             }
-
+            $tmp['category'] = ClientEcho::getCategory($row ["idEvents"]);
             $tmp['tickets'] = TicketsSoapHandler::getTickets($row ["idEvents"]);
 
             $response ['events'] [] = $tmp;
@@ -177,6 +177,7 @@ class ClientEcho
             $tmp ["state"] = $row ["state"];
             $tmp ["zip"] = $row ["zip"];
             $tmp ["youtubeVideo"] = $row ["youtubeVideo"];
+            $tmp['category'] = ClientEcho::getCategory($row ["idEvents"]);
             $tmp['tickets'] = TicketsSoapHandler::getTickets($row ["id"]);
 
             $response ['events'] [] = $tmp;
@@ -219,5 +220,16 @@ class ClientEcho
                 return DECEMBER;
 
         }
+    }
+
+    private static function getCategory($idEvent)
+    {
+        $dbHandler = new DbHandler();
+        $category = $dbHandler->getCategory($idEvent);
+
+        //$tmp['idCategory'] = $category['idCategory'];
+        // $tmp['categoryName'] = $category['category'];
+
+        return $category['category'];
     }
 }

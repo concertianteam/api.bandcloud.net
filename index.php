@@ -340,6 +340,7 @@ $app->post('/events', array(
     $performerEmail = $app->request->post('performerEmail');
     $performerPhoneNumber = $app->request->post('performerPhoneNumber');
     $youtubeVideo = $app->request->post('youtubeVideo');
+    $category = $app->request->post('category');
 
     if ($detail == null) $detail = '';
     if ($imgUrl == null) $imgUrl = '';
@@ -347,7 +348,7 @@ $app->post('/events', array(
     //if ($performerEmail == null) $performerEmail = '';
     //if ($performerPhoneNumber == null) $performerPhoneNumber = '';
 
-    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo);
+    $eventId = $dbHandler->createEvent($idVenue, $name, $detail, $entry, $imgUrl, $date, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo, $category);
 
     $response = array();
     if ($eventId != NULL) {
@@ -530,7 +531,7 @@ $app->put('/events/:id', array(
     $performerEmail = $app->request->put('performerEmail');
     $performerPhoneNumber = $app->request->put('performerPhoneNumber');
     $youtubeVideo = $app->request->post('youtubeVideo');
-    //$bands = $app->request->put('bands');
+    $category = $app->request->put('category');
 
     $dbHandler = new DbHandler ();
     $response = array();
@@ -538,7 +539,7 @@ $app->put('/events/:id', array(
     if ($imgUrl == null) $imgUrl = '';
 
     // updating event                ($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible)
-    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo);
+    $result = $dbHandler->updateEvent($idEvent, $name, $date, $detail, $entry, $imgUrl, $time, $status, $visible, $notes, $performerEmail, $performerPhoneNumber, $youtubeVideo, $category);
     if ($result) {
         // event successfully updated
         $response ["success"] = TRUE;
